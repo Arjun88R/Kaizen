@@ -12,7 +12,9 @@ Cloud Database Storage: Securely saves all tracked job applications to a central
 
 Serverless Architecture: Built on a highly scalable, cost-effective serverless backend using Firebase Cloud Functions, requiring zero server management.
 
-Web Dashboard (In Development): A React-based web application to view, filter, and manage all tracked jobs in a centralized dashboard.
+Web Dashboard: A React-based web application to view, filter, and manage all tracked jobs in a centralized dashboard.
+
+more features to come :)
 
 Tech Stack
 Frontend - JavaScript, HTML5, CSS3, Chrome Extension API
@@ -36,20 +38,9 @@ Ingestion: The user initiates the process by clicking the "Track this Job" butto
 
 Trigger: The extension sends the active tab's URL to a dedicated Firebase Cloud Function endpoint.
 
-Processing:
-
-The Cloud Function uses a headless browser (Puppeteer) to scrape the full, rendered text content from the provided URL.
-
-This unstructured text is sent to the Google Gemini API.
-
-The AI processes the text and returns a structured JSON object containing the job details.
-
-Storage: The Cloud Function saves this structured JSON data as a new document in the Cloud Firestore database.
-
-Visualization (Dashboard): A separate React web application hosted on Firebase Hosting reads directly from the Firestore database to display all the tracked jobs to the user.
 
 Project Setup
-This project is a "monorepo" containing two main packages: backend and frontend.
+This project contains packages - backend, frontend and dashboard
 
 Backend Setup (backend folder)
 Navigate to the backend directory: cd backend
