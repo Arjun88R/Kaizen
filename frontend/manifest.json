@@ -8,8 +8,8 @@
     "tabs"
   ],
   "host_permissions": [
-    "https://*.a.run.app/",
-    "http://localhost:3000/"
+    "https://us-central1-jacker-c269b.cloudfunctions.net/*",
+    "https://jacker-c269b.web.app/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -17,8 +17,5 @@
   },
   "icons": {
     "128": "icon.png"
-  },
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
   }
 }

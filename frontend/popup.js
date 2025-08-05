@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const statusMessage = document.getElementById('statusMessage');
   const dashboardBtn = document.getElementById('dashboardBtn');
 
-  // --- IMPORTANT: PASTE YOUR CLOUD FUNCTION URL HERE ---
-  const your_cloud_function_url = 'https://analysejobposting-nns3x5vgxa-uc.a.run.app';
-
+  // Update to use your deployed Cloud Function
+  const analyzeJobUrl = 'https://us-central1-jacker-c269b.cloudfunctions.net/analyseJobPosting';
+  
   trackButton.addEventListener('click', function() {
     statusMessage.textContent = 'Analyzing...';
     trackButton.disabled = true;
@@ -14,49 +14,83 @@ document.addEventListener('DOMContentLoaded', function() {
       const currentTab = tabs[0];
       if (currentTab && currentTab.url) {
         
-        // Construct the full API URL with the job page URL as a parameter
-        const apiUrl = `${your_cloud_function_url}?url=${encodeURIComponent(currentTab.url)}`;
-        
-        // Call your backend!
-        fetch(apiUrl)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`Network response was not ok`);
-            }
-            return response.json();
+        // Enhanced request with better error handling
+        fetch(analyzeJobUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            url: currentTab.url,
+            title: currentTab.title,
+            timestamp: new Date().toISOString()
           })
-          .then(data => {
-            console.log("Data from AI:", data);
-            statusMessage.textContent = `Successfully Tracked!`;
-            // In a full app, you would now save this 'data' object to Firestore
-          })
-          .catch(error => {
-            console.error('Error tracking job:', error);
-            statusMessage.textContent = "Error: Could not track.";
-          });
+        })
+        .then(response => {
+          console.log('Response status:', response.status);
+          console.log('Response headers:', response.headers);
+          
+          if (!response.ok) {
+            return response.text().then(text => {
+              console.error('Error response body:', text);
+              throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log("Success! Data from function:", data);
+          statusMessage.textContent = `Successfully Tracked!`;
+          updateStats();
+        })
+        .catch(error => {
+          console.error('Full error details:', error);
+          statusMessage.textContent = `Error: ${error.message}`;
+        })
+        .finally(() => {
+          trackButton.disabled = false;
+        });
 
       } else {
          statusMessage.textContent = "Error: Could not get URL.";
+         trackButton.disabled = false;
       }
     });
   });
 
-  // Add dashboard button click handler
+  // Dashboard button
   dashboardBtn.addEventListener('click', function() {
       chrome.tabs.create({ url: 'https://jacker-c269b.web.app' });
   });
   
-  // Add click animation to stats
-  document.querySelectorAll('.stat-card').forEach(card => {
-      card.addEventListener('click', function() {
-          this.style.transform = 'translate(3px, 3px)';
-          setTimeout(() => {
-              this.style.transform = 'translate(0, 0)';
-          }, 150);
+  // Update stats function
+  function updateStats() {
+    const getJobsUrl = 'https://us-central1-jacker-c269b.cloudfunctions.net/getJobs';
+    
+    fetch(getJobsUrl)
+      .then(response => response.json())
+      .then(data => {
+        if (data.jobs) {
+          const totalJobs = data.jobs.length;
+          const today = new Date().toDateString();
+          const todayJobs = data.jobs.filter(job => {
+            if (job.trackedAt) {
+              const jobDate = job.trackedAt.toDate ? job.trackedAt.toDate() : new Date(job.trackedAt);
+              return jobDate.toDateString() === today;
+            }
+            return false;
+          }).length;
+          
+          document.getElementById('totalJobs').textContent = totalJobs;
+          document.getElementById('todayJobs').textContent = todayJobs;
+        }
+      })
+      .catch(error => {
+        console.error('Error updating stats:', error);
       });
-  });
+  }
+  
+  // Load stats when popup opens
+  updateStats();
 });
-
-function openDashboard() {
-    chrome.tabs.create({ url:'https://jacker-c269b.web.app'});
-}

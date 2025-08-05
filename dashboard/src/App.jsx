@@ -3,6 +3,13 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, query, orderBy, getDocs, doc, updateDoc } from "firebase/firestore";
 import './App.css';
 
+// Debug environment variables
+console.log('Environment variables:', {
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY ? 'Loaded' : 'Missing',
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID ? 'Loaded' : 'Missing',
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN ? 'Loaded' : 'Missing'
+});
+
 // Your web app's Firebase configuration - using environment variables
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -14,10 +21,21 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
-// Validate environment variables are loaded
-if (!process.env.REACT_APP_FIREBASE_API_KEY) {
-  console.error('Firebase configuration missing. Please check your .env file.');
+// Enhanced validation
+const requiredEnvVars = [
+  'REACT_APP_FIREBASE_API_KEY',
+  'REACT_APP_FIREBASE_AUTH_DOMAIN',
+  'REACT_APP_FIREBASE_PROJECT_ID'
+];
+
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+if (missingVars.length > 0) {
+  console.error('Missing required environment variables:', missingVars);
+  console.error('Please check your .env file in the dashboard directory');
 }
+
+// Log the actual config (without sensitive data)
+console.log('Firebase config projectId:', firebaseConfig.projectId);
 
 // Initialize Firebase and get a reference to the database
 const app = initializeApp(firebaseConfig);
@@ -107,7 +125,7 @@ export default function App() {
     }
   };
 
-  const formatDate = (timestamp => {
+  const formatDate = (timestamp) => {
     if (!timestamp) return 'Unknown';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     return date.toLocaleDateString('en-US', {
@@ -115,7 +133,7 @@ export default function App() {
       month: '2-digit',
       day: '2-digit'
     });
-  });
+  };
 
   const truncateUrl = (url, maxLength = 50) => {
     if (!url) return 'N/A';
